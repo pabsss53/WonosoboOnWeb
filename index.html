@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WOW - Wonosobo on Web GIS Website</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-green: #22c55e;
+            --secondary-green: #10b981;
+            --dark-green: #065f46;
+            --light-green: #86efac;
+            --accent-green: #34d399;
+            --white: #ffffff;
+            --light-gray: #f8fafc;
+            --gray: #64748b;
+            --dark-gray: #334155;
+            --black: #0f172a;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        [data-theme="dark"] {
+            --white: #0f172a;
+            --light-gray: #1e293b;
+            --gray: #94a3b8;
+            --dark-gray: #e2e8f0;
+            --black: #ffffff;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--dark-gray);
+            background-color: var(--white);
+            transition: var(--transition);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Styles */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .header {
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary-green);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--dark-gray);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-green);
+            background-color: var(--light-gray);
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active {
+            color: var(--primary-green);
+            background-color: var(--light-gray);
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background-color: var(--dark-gray);
+            margin: 3px 0;
+            transition: var(--transition);
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(-45deg) translate(-5px, 6px);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(45deg) translate(-5px, -6px);
+        }
+
+        .theme-toggle {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-left: 1rem;
+        }
+
+        .theme-toggle:hover {
+            background: var(--secondary-green);
+            transform: scale(1.1);
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.9), rgba(16, 185, 129, 0.9)),
+                        url('https://images.pexels.com/photos/3408744/pexels-photo-3408744.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2') center/cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .hero-content {
+            color: white;
+            z-index: 2;
+            max-width: 800px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .cta-button {
+            background: white;
+            color: var(--primary-green);
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: var(--shadow);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            background: var(--light-gray);
+        }
+
+        /* Weather Widget */
+        .weather-widget {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow);
+            z-index: 999;
+            min-width: 200px;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .weather-widget {
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        .weather-widget:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .weather-location {
+            font-weight: 600;
+            color: var(--primary-green);
+            margin-bottom: 0.5rem;
+        }
+
+        .weather-temp {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-gray);
+        }
+
+        .weather-desc {
+            font-size: 0.9rem;
+            color: var(--gray);
+            text-transform: capitalize;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        .section {
+            padding: 4rem 0;
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--dark-gray);
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-green), var(--secondary-green));
+            border-radius: 2px;
+        }
+
+        /* Map Section */
+        .map-container {
+            height: 600px;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            margin: 2rem 0;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Tourism Cards */
+        .tourism-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .tourism-card {
+            background: var(--white);
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        [data-theme="dark"] .tourism-card {
+            background: var(--light-gray);
+        }
+
+        .tourism-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .tourism-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .tourism-card-content {
+            padding: 1.5rem;
+        }
+
+        .tourism-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 0.5rem;
+        }
+
+        .tourism-card p {
+            color: var(--gray);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* Statistics Section */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .stat-card {
+            background: var(--light-gray);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-green), var(--secondary-green));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary-green);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--dark-gray);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow);
+            margin: 2rem 0;
+        }
+
+        [data-theme="dark"] .chart-container {
+            background: var(--light-gray);
+        }
+
+        .chart {
+            height: 300px;
+            background: linear-gradient(135deg, var(--light-green), var(--accent-green));
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: end;
+            justify-content: space-around;
+            padding: 1rem;
+            gap: 0.5rem;
+        }
+
+        .chart-bar {
+            background: var(--primary-green);
+            border-radius: 4px 4px 0 0;
+            min-width: 40px;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .chart-bar:hover {
+            background: var(--secondary-green);
+            transform: scale(1.05);
+        }
+
+        .chart-bar::after {
+            content: attr(data-value);
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark-gray);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .chart-bar:hover::after {
+            opacity: 1;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .modal-content {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        [data-theme="dark"] .modal-content {
+            background: var(--light-gray);
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            background: var(--secondary-green);
+            transform: scale(1.1);
+        }
+
+        .modal img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--dark-green);
+            color: white;
+            padding: 3rem 0 1rem;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--light-green);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-button {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .search-button:hover {
+            background: var(--secondary-green);
+            transform: scale(1.05);
+        }
+
+        .contact-info {
+            list-style: none;
+        }
+
+        .contact-info li {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-link {
+            color: white;
+            font-size: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .social-link:hover {
+            color: var(--light-green);
+            transform: scale(1.2);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-menu {
+                position: fixed;
+                top: 80px;
+                left: -100%;
+                width: 100%;
+                height: calc(100vh - 80px);
+                background: var(--white);
+                flex-direction: column;
+                justify-content: start;
+                padding-top: 2rem;
+                transition: var(--transition);
+            }
+
+            [data-theme="dark"] .nav-menu {
+                background: var(--light-gray);
+            }
+
+            .nav-menu.active {
+                left: 0;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .weather-widget {
+                position: static;
+                margin: 1rem;
+                width: calc(100% - 2rem);
+            }
+
+            .tourism-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--light-gray);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-green);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-green);
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Pulse Animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* Floating Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Custom Leaflet Popup */
+        .custom-popup {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .custom-popup .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .custom-popup .leaflet-popup-content {
+            margin: 0;
+            padding: 0;
+        }
+
+        .popup-image {
+            width: 250px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .popup-content {
+            padding: 1rem;
+        }
+
+        .popup-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-green);
+            margin-bottom: 0.5rem;
+        }
+
+        .popup-description {
+            font-size: 0.9rem;
+            color: var(--gray);
+            line-height: 1.4;
+            margin-bottom: 0.5rem;
+        }
+
+        .popup-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: #fbbf24;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary-green);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow);
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: var(--transition);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        /* Back to Top Button */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary-green);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            background: var(--secondary-green);
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <a href="#" class="logo">
+                <i class="fas fa-mountain"></i>
+                WOW
+            </a>
+            <ul class="nav-menu">
+                <li><a href="#" class="nav-link active" data-page="home">Home</a></li>
+                <li><a href="#" class="nav-link" data-page="statistics">Statistics</a></li>
+                <li><a href="#" class="nav-link" data-page="about">About</a></li>
+            </ul>
+            <div style="display: flex; align-items: center;">
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="hamburger" id="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Weather Widget -->
+    <div class="weather-widget" id="weatherWidget">
+        <div class="weather-location">Wonosobo, ID</div>
+        <div class="weather-temp" id="weatherTemp">
+            <span class="loading"></span>
+        </div>
+        <div class="weather-desc" id="weatherDesc">Loading weather...</div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="float">Welcome to Wonosobo</h1>
+            <p>Discover the Natural Beauty and Cultural Heritage of Central Java</p>
+            <a href="#map-section" class="cta-button">Explore Map</a>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Home Section -->
+        <section id="home" class="section active">
+            <div class="container">
+                <h2 class="section-title">Discover Wonosobo</h2>
+                
+                <!-- Map Section -->
+                <div id="map-section">
+                    <div class="map-container">
+                        <div id="map"></div>
+                    </div>
+                </div>
+
+                <!-- Tourism Cards -->
+                <div class="tourism-grid" id="tourismGrid">
+                    <!-- Tourism cards will be populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Statistics Section -->
+        <section id="statistics" class="section">
+            <div class="container">
+                <h2 class="section-title">Wonosobo Statistics</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number pulse">15</div>
+                        <div class="stat-label">Tourist Attractions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number pulse">972.4</div>
+                        <div class="stat-label">Area (km²)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number pulse">793K</div>
+                        <div class="stat-label">Population</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number pulse">15</div>
+                        <div class="stat-label">Districts</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 2rem; color: var(--dark-gray);">Tourist Visits by Month (2024)</h3>
+                    <div class="chart">
+                        <div class="chart-bar" style="height: 60%;" data-value="12K"></div>
+                        <div class="chart-bar" style="height: 45%;" data-value="9K"></div>
+                        <div class="chart-bar" style="height: 80%;" data-value="16K"></div>
+                        <div class="chart-bar" style="height: 70%;" data-value="14K"></div>
+                        <div class="chart-bar" style="height: 90%;" data-value="18K"></div>
+                        <div class="chart-bar" style="height: 100%;" data-value="20K"></div>
+                        <div class="chart-bar" style="height: 85%;" data-value="17K"></div>
+                        <div class="chart-bar" style="height: 75%;" data-value="15K"></div>
+                        <div class="chart-bar" style="height: 65%;" data-value="13K"></div>
+                        <div class="chart-bar" style="height: 55%;" data-value="11K"></div>
+                        <div class="chart-bar" style="height: 40%;" data-value="8K"></div>
+                        <div class="chart-bar" style="height: 50%;" data-value="10K"></div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 2rem; color: var(--dark-gray);">Population by Age Group</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">25%</div>
+                            <div class="stat-label">Children (0-14)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">67%</div>
+                            <div class="stat-label">Adults (15-64)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">8%</div>
+                            <div class="stat-label">Elderly (65+)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="section">
+            <div class="container">
+                <h2 class="section-title">About WOW</h2>
+                <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+                    <p style="font-size: 1.2rem; line-height: 1.8; margin-bottom: 2rem; color: var(--gray);">
+                        WOW (Wonosobo on Web) is a comprehensive Geographic Information System (GIS) platform 
+                        designed to showcase the natural beauty, cultural heritage, and tourism potential of 
+                        Wonosobo Regency, Central Java, Indonesia.
+                    </p>
+                    
+                    <div class="tourism-grid" style="margin-top: 3rem;">
+                        <div class="tourism-card">
+                            <i class="fas fa-map-marked-alt" style="font-size: 3rem; color: var(--primary-green); margin: 1rem 0;"></i>
+                            <div class="tourism-card-content">
+                                <h3>Interactive Mapping</h3>
+                                <p>Explore Wonosobo through our interactive map featuring 15 carefully selected tourist attractions with detailed information and stunning imagery.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="tourism-card">
+                            <i class="fas fa-cloud-sun" style="font-size: 3rem; color: var(--primary-green); margin: 1rem 0;"></i>
+                            <div class="tourism-card-content">
+                                <h3>Real-time Weather</h3>
+                                <p>Stay updated with current weather conditions in Wonosobo to plan your visit and outdoor activities effectively.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="tourism-card">
+                            <i class="fas fa-chart-bar" style="font-size: 3rem; color: var(--primary-green); margin: 1rem 0;"></i>
+                            <div class="tourism-card-content">
+                                <h3>Statistical Insights</h3>
+                                <p>Access comprehensive data and statistics about Wonosobo's demographics, tourism trends, and regional information.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="tourism-card">
+                            <i class="fas fa-palette" style="font-size: 3rem; color: var(--primary-green); margin: 1rem 0;"></i>
+                            <div class="tourism-card-content">
+                                <h3>Modern Design</h3>
+                                <p>Experience a beautiful, responsive interface with dark/light mode support and smooth animations for optimal user experience.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 3rem; padding: 2rem; background: var(--light-gray); border-radius: 1rem;">
+                        <h3 style="color: var(--primary-green); margin-bottom: 1rem;">Our Mission</h3>
+                        <p style="color: var(--gray); line-height: 1.6;">
+                            To promote sustainable tourism in Wonosobo by providing accessible, accurate, and engaging 
+                            information about the region's attractions, culture, and natural heritage. We aim to bridge 
+                            the gap between technology and tourism, making it easier for visitors to discover and 
+                            appreciate the unique beauty of Wonosobo.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div id="modalBody">
+                <!-- Modal content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Search Destinations</h3>
+                    <p>Find your perfect destination in Wonosobo</p>
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="Search attractions..." id="searchInput">
+                        <button class="search-button" id="searchButton">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Contact Information</h3>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i> Wonosobo Regency, Central Java</li>
+                        <li><i class="fas fa-phone"></i> +62 286 321234</li>
+                        <li><i class="fas fa-envelope"></i> info@wonosoboweb.id</li>
+                        <li><i class="fas fa-globe"></i> www.wonosoboweb.id</li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Follow Us</h3>
+                    <p>Stay connected for updates and news</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul class="contact-info">
+                        <li><a href="#" style="color: white; text-decoration: none;"><i class="fas fa-home"></i> Home</a></li>
+                        <li><a href="#" style="color: white; text-decoration: none;"><i class="fas fa-chart-bar"></i> Statistics</a></li>
+                        <li><a href="#" style="color: white; text-decoration: none;"><i class="fas fa-info-circle"></i> About</a></li>
+                        <li><a href="#" style="color: white; text-decoration: none;"><i class="fas fa-envelope"></i> Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 WOW - Wonosobo on Web. All rights reserved. | Developed with ❤️ for Wonosobo Tourism</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <span id="notificationText"></span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Tourism Data
+        const tourismData = [
+            {
+                id: 1,
+                name: "Dieng Plateau",
+                lat: -7.2044,
+                lng: 109.9086,
+                image: "https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg?auto=compress&cs=tinysrgb&w=500",
+                description: "A highland plateau with ancient Hindu temples, colorful lakes, and stunning sunrise views. Famous for its cool climate and unique geological features.",
+                rating: 4.8,
+                category: "Natural Wonder"
+            },
+            {
+                id: 2,
+                name: "Telaga Warna",
+                lat: -7.2056,
+                lng: 109.9072,
+                image: "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=500",
+                description: "A beautiful colored lake that changes hues throughout the day due to sulfur content. A must-visit natural attraction in Dieng.",
+                rating: 4.7,
+                category: "Lake"
+            },
+            {
+                id: 3,
+                name: "Arjuna Temple Complex",
+                lat: -7.2067,
+                lng: 109.9092,
+                image: "https://images.pexels.com/photos/161901/arjuna-temple-java-indonesia-temple-161901.jpeg?auto=compress&cs=tinysrgb&w=500",
+                description: "Ancient Hindu temple complex dating back to the 8th century, showcasing remarkable architecture and historical significance.",
+                rating: 4.6,
+                category: "Historical Site"
+            },
+            {
+                id: 4,
+                name: "Sikunir Peak",
+                lat: -7.2833,
+                lng: 109.9167,
+                image: "https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg?auto=compress&cs=tinysrgb&w=500",
+                description: "Famous sunrise point offering breathtaking panoramic views of the Dieng Plateau and surrounding mountains.",
+                rating: 4.9,
+                category: "Mountain Peak"
+            },
+            {
+                id: 5,
+                name: "Kawah Sikidang",
+                lat: -7.2075,
+                lng: 109.9083,
+                image: "https://images.pexels.com/photos/3408744/pexels-photo-3408744.jpeg?auto=compress&cs=tinysrgb&w=500",
+                description: "Active crater with bubbling mud pools and sulfuric gases, creating a unique geothermal landscape.",
+                rating: 4.5,
+                category: "Volcanic Crater"
+            },
+            {
+                id: 6,
+                name: "Wonosobo Tea Plantation",
+                lat: -7.3667,
+                lng: 109.9000,
+                image: "https://images.pexels.com/photos/3571563/pexels-photo-3571563.jpeg?auto=compress&cs=tinysrgb&w=500",
+                description: "Vast tea plantations with rolling green hills, offering scenic walks and tea tasting experiences.",
+                rating: 4.4,
+                category: "Plantation"
+            },
+            {
+                id: 7,
+                name: "Mendut Village",
+                lat: -7.4167,
+                lng: 109.8833,
+                image: "https://images.pexels.com/photos/2662116/pexels-photo-2662116.jpeg?auto=compress&cs=tinysrgb&w=500",
+                description: "Traditional Javanese village showcasing local culture, handicrafts, and authentic rural lifestyle.",
+                rating: 4.3,
+                category: "Cultural Village"
+            },
+            {
+                id: 8,
+                name: "Kledung Pass",
+                lat: -7.3000,
+                lng: 109.9500,
+                image: "https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=500",
+                description: "Mountain pass offering spectacular views and cool mountain air, perfect for photography and relaxation.",
+                rating: 4.2,
+                category: "Mountain Pass"
+            },
+            {
+                id: 9,
+                name: "Tambi Tea Plantation",
+                lat: -7.1667,
+                lng: 109.9167,
+                image: "https://images.pexels.com/photos/3571563/pexels-photo-3571563.jpeg?auto=compress&cs=tinysrgb&w=500",
+                description: "Premium tea plantation with guided tours, tea processing facilities, and panoramic highland views.",
+                rating: 4.5,
+                category: "Plantation"
+            },
+            {
+                id: 10,
+                name: "Bima Temple",
+                lat: -7.2061,
+                lng: 109.9089,
+                image: "https://images.pexels.com/photos/161901/arjuna-temple-java-indonesia-temple-161901.jpeg?auto=compress&cs=tinysrgb&w=500",
+                description: "Ancient Hindu temple with unique architecture, part of the Dieng temple complex with rich historical value.",
+                rating: 4.4,
+                category: "Historical Site"
+            },
+            {
+                id: 11,
+                name: "Pos Pantau Dieng",
+                lat: -7.2100,
+                lng: 109.9050,
+                image: "https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg?auto=compress&cs=tinysrgb&w=500",
+                description: "Observation post offering 360-degree views of the Dieng Plateau, perfect for sunset and sunrise viewing.",
+                rating: 4.3,
+                category: "Viewpoint"
+            },
+            {
+                id: 12,
+                name: "Sumur Jalatunda",
+                lat: -7.2083,
+                lng: 109.9111,
+                image: "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=500",
+                description: "Sacred natural spring with crystal clear water, believed to have healing properties by local communities.",
+                rating: 4.1,
+                category: "Natural Spring"
+            },
+            {
+                id: 13,
+                name: "Gardu Pandang Dieng",
+                lat: -7.2056,
+                lng: 109.9122,
+                image: "https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=500",
+                description: "Modern viewing tower providing elevated panoramic views of the entire Dieng Plateau and surrounding valleys.",
+                rating: 4.2,
+                category: "Viewpoint"
+            },
+            {
+                id: 14,
+                name: "Watu Tulis",
+                lat: -7.2144,
+                lng: 109.9056,
+                image: "https://images.pexels.com/photos/3408744/pexels-photo-3408744.jpeg?auto=compress&cs=tinysrgb&w=500",
+                description: "Ancient stone inscription site with historical significance, showcasing early Javanese script and culture.",
+                rating: 4.0,
+                category: "Archaeological Site"
+            },
+            {
+                id: 15,
+                name: "Bukit Sidengkeng",
+                lat: -7.2889,
+                lng: 109.9111,
+                image: "https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg?auto=compress&cs=tinysrgb&w=500",
+                description: "Scenic hill offering beautiful sunrise views and hiking trails through pine forests and grasslands.",
+                rating: 4.3,
+                category: "Hill"
+            }
+        ];
+
+        // Global variables
+        let map;
+        let currentPage = 'home';
+        let isDarkMode = false;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMap();
+            loadWeather();
+            setupEventListeners();
+            renderTourismCards();
+            showNotification('Welcome to WOW - Wonosobo on Web!');
+        });
+
+        // Initialize Leaflet Map
+        function initializeMap() {
+            map = L.map('map').setView([-7.2056, 109.9086], 11);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Add custom markers for each tourism location
+            tourismData.forEach(location => {
+                const marker = L.marker([location.lat, location.lng])
+                    .addTo(map);
+
+                const popupContent = `
+                    <div class="custom-popup">
+                        <img src="${location.image}" alt="${location.name}" class="popup-image">
+                        <div class="popup-content">
+                            <h3 class="popup-title">${location.name}</h3>
+                            <p class="popup-description">${location.description}</p>
+                            <div class="popup-rating">
+                                ${generateStars(location.rating)}
+                                <span style="margin-left: 0.5rem; color: var(--gray);">${location.rating}</span>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--primary-green); margin-top: 0.5rem;">
+                                📍 ${location.category}
+                            </p>
+                        </div>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent, {
+                    maxWidth: 250,
+                    className: 'custom-popup'
+                });
+
+                marker.on('click', function() {
+                    marker.openPopup();
+                });
+            });
+        }
+
+        // Generate star rating
+        function generateStars(rating) {
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 !== 0;
+            let stars = '';
+
+            for (let i = 0; i < fullStars; i++) {
+                stars += '<i class="fas fa-star"></i>';
+            }
+
+            if (hasHalfStar) {
+                stars += '<i class="fas fa-star-half-alt"></i>';
+            }
+
+            const emptyStars = 5 - Math.ceil(rating);
+            for (let i = 0; i < emptyStars; i++) {
+                stars += '<i class="far fa-star"></i>';
+            }
+
+            return stars;
+        }
+
+        // Load weather data
+        async function loadWeather() {
+            try {
+                // Simulated weather data (in real implementation, use actual weather API)
+                const weatherData = {
+                    temperature: Math.floor(Math.random() * 10) + 20, // 20-30°C
+                    description: ['sunny', 'partly cloudy', 'cloudy', 'light rain'][Math.floor(Math.random() * 4)],
+                    humidity: Math.floor(Math.random() * 30) + 60 // 60-90%
+                };
+
+                document.getElementById('weatherTemp').innerHTML = `${weatherData.temperature}°C`;
+                document.getElementById('weatherDesc').textContent = weatherData.description;
+            } catch (error) {
+                console.error('Weather loading failed:', error);
+                document.getElementById('weatherTemp').innerHTML = '25°C';
+                document.getElementById('weatherDesc').textContent = 'Pleasant weather';
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.dataset.page;
+                    switchPage(page);
+                });
+            });
+
+            // Hamburger menu
+            document.getElementById('hamburger').addEventListener('click', function() {
+                this.classList.toggle('active');
+                document.querySelector('.nav-menu').classList.toggle('active');
+            });
+
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', function() {
+                toggleTheme();
+            });
+
+            // Modal close
+            document.getElementById('modalClose').addEventListener('click', function() {
+                closeModal();
+            });
+
+            document.getElementById('modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+
+            // Search functionality
+            document.getElementById('searchButton').addEventListener('click', function() {
+                performSearch();
+            });
+
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+
+            // Back to top button
+            window.addEventListener('scroll', function() {
+                const backToTop = document.getElementById('backToTop');
+                if (window.pageYOffset > 300) {
+                    backToTop.classList.add('show');
+                } else {
+                    backToTop.classList.remove('show');
+                }
+            });
+
+            document.getElementById('backToTop').addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            // Smooth scrolling for CTA button
+            document.querySelector('.cta-button').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('map-section').scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+
+        // Switch between pages
+        function switchPage(page) {
+            // Update navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+
+            // Update sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(page).classList.add('active');
+
+            // Close mobile menu
+            document.getElementById('hamburger').classList.remove('active');
+            document.querySelector('.nav-menu').classList.remove('active');
+
+            currentPage = page;
+        }
+
+        // Toggle theme
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            const body = document.body;
+            const themeToggle = document.getElementById('themeToggle');
+
+            if (isDarkMode) {
+                body.setAttribute('data-theme', 'dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                showNotification('Dark mode activated');
+            } else {
+                body.removeAttribute('data-theme');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                showNotification('Light mode activated');
+            }
+        }
+
+        // Render tourism cards
+        function renderTourismCards() {
+            const container = document.getElementById('tourismGrid');
+            container.innerHTML = '';
+
+            tourismData.forEach(location => {
+                const card = document.createElement('div');
+                card.className = 'tourism-card';
+                card.innerHTML = `
+                    <img src="${location.image}" alt="${location.name}">
+                    <div class="tourism-card-content">
+                        <h3>${location.name}</h3>
+                        <p>${location.description.substring(0, 100)}...</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                            <div class="popup-rating">
+                                ${generateStars(location.rating)}
+                                <span style="margin-left: 0.5rem;">${location.rating}</span>
+                            </div>
+                            <span style="color: var(--primary-green); font-size: 0.9rem;">${location.category}</span>
+                        </div>
+                    </div>
+                `;
+
+                card.addEventListener('click', function() {
+                    openModal(location);
+                });
+
+                container.appendChild(card);
+            });
+        }
+
+        // Open modal
+        function openModal(location) {
+            const modal = document.getElementById('modal');
+            const modalBody = document.getElementById('modalBody');
+
+            modalBody.innerHTML = `
+                <img src="${location.image}" alt="${location.name}" style="width: 100%; height: 300px; object-fit: cover; border-radius: 0.5rem; margin-bottom: 1rem;">
+                <h2 style="color: var(--primary-green); margin-bottom: 1rem;">${location.name}</h2>
+                <p style="color: var(--gray); line-height: 1.6; margin-bottom: 1rem;">${location.description}</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div class="popup-rating">
+                        ${generateStars(location.rating)}
+                        <span style="margin-left: 0.5rem; color: var(--gray);">${location.rating}/5</span>
+                    </div>
+                    <span style="color: var(--primary-green); font-weight: 600;">${location.category}</span>
+                </div>
+                <div style="background: var(--light-gray); padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
+                    <h4 style="color: var(--primary-green); margin-bottom: 0.5rem;">Location Details</h4>
+                    <p style="color: var(--gray); font-size: 0.9rem;">📍 Coordinates: ${location.lat}, ${location.lng}</p>
+                    <button onclick="focusOnMap(${location.lat}, ${location.lng})" 
+                            style="background: var(--primary-green); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; margin-top: 1rem; cursor: pointer; transition: var(--transition);">
+                        View on Map
+                    </button>
+                </div>
+            `;
+
+            modal.classList.add('active');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        // Focus on map location
+        function focusOnMap(lat, lng) {
+            closeModal();
+            switchPage('home');
+            setTimeout(() => {
+                map.setView([lat, lng], 15);
+                document.getElementById('map-section').scrollIntoView({ behavior: 'smooth' });
+            }, 300);
+        }
+
+        // Perform search
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            if (!searchTerm) {
+                showNotification('Please enter a search term');
+                return;
+            }
+
+            const results = tourismData.filter(location => 
+                location.name.toLowerCase().includes(searchTerm) ||
+                location.description.toLowerCase().includes(searchTerm) ||
+                location.category.toLowerCase().includes(searchTerm)
+            );
+
+            if (results.length > 0) {
+                showNotification(`Found ${results.length} result(s) for "${searchTerm}"`);
+                // Focus on first result
+                const firstResult = results[0];
+                switchPage('home');
+                setTimeout(() => {
+                    map.setView([firstResult.lat, firstResult.lng], 15);
+                    document.getElementById('map-section').scrollIntoView({ behavior: 'smooth' });
+                }, 300);
+            } else {
+                showNotification(`No results found for "${searchTerm}"`);
+            }
+
+            document.getElementById('searchInput').value = '';
+        }
+
+        // Show notification
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Animate numbers on scroll
+        function animateNumbers() {
+            const numbers = document.querySelectorAll('.stat-number');
+            numbers.forEach(number => {
+                const target = parseInt(number.textContent);
+                let current = 0;
+                const increment = target / 50;
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    number.textContent = Math.floor(current);
+                }, 50);
+            });
+        }
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                    
+                    if (entry.target.classList.contains('stats-grid')) {
+                        setTimeout(animateNumbers, 300);
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements for animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const elementsToAnimate = document.querySelectorAll('.tourism-card, .stat-card, .chart-container');
+            elementsToAnimate.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(el);
+            });
+        });
+
+        // Update weather periodically
+        setInterval(loadWeather, 300000); // Update every 5 minutes
+
+        // Add some interactive features
+        document.addEventListener('mousemove', function(e) {
+            const cursor = document.querySelector('.cursor');
+            if (cursor) {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+            }
+        });
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.getElementById('hamburger').classList.remove('active');
+                document.querySelector('.nav-menu').classList.remove('active');
+            }
+        });
+
+        // Performance optimization
+        let ticking = false;
+        function updateOnScroll() {
+            // Handle scroll-based animations
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    // Scroll-based updates here
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }
+
+        window.addEventListener('scroll', updateOnScroll);
+
+        // Add loading states
+        function showLoading(element) {
+            element.innerHTML = '<div class="loading"></div>';
+        }
+
+        function hideLoading(element, content) {
+            element.innerHTML = content;
+        }
+
+        // Initialize tooltips and other interactive elements
+        function initializeTooltips() {
+            const tooltipElements = document.querySelectorAll('[data-tooltip]');
+            tooltipElements.forEach(element => {
+                element.addEventListener('mouseenter', function() {
+                    // Show tooltip
+                });
+                element.addEventListener('mouseleave', function() {
+                    // Hide tooltip
+                });
+            });
+        }
+
+        // Call initialization functions
+        setTimeout(() => {
+            initializeTooltips();
+        }, 1000);
+
+        // Add more interactive features
+        const chartBars = document.querySelectorAll('.chart-bar');
+        chartBars.forEach(bar => {
+            bar.addEventListener('click', function() {
+                const value = this.getAttribute('data-value');
+                showNotification(`Tourist visits: ${value}`);
+            });
+        });
+
+        // Add social sharing functionality
+        function shareOnSocial(platform) {
+            const url = encodeURIComponent(window.location.href);
+            const text = encodeURIComponent('Check out WOW - Wonosobo on Web! Discover amazing tourist attractions in Wonosobo.');
+            
+            let shareUrl = '';
+            switch(platform) {
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+                    break;
+                case 'twitter':
+                    shareUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+                    break;
+                case 'whatsapp':
+                    shareUrl = `https://wa.me/?text=${text} ${url}`;
+                    break;
+            }
+            
+            if (shareUrl) {
+                window.open(shareUrl, '_blank', 'width=600,height=400');
+            }
+        }
+
+        // Add social sharing buttons click handlers
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.social-link')) {
+                e.preventDefault();
+                const platform = e.target.closest('.social-link').querySelector('i').classList[1].split('-')[1];
+                shareOnSocial(platform);
+            }
+        });
+
+        console.log('WOW - Wonosobo on Web initialized successfully!');
+    </script>
+</body>
+</html>
