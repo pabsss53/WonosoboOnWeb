@@ -1362,23 +1362,31 @@
         }
 
         // Load weather data
-        async function loadWeather() {
-            try {
-                // Simulated weather data (in real implementation, use actual weather API)
-                const weatherData = {
-                    temperature: Math.floor(Math.random() * 10) + 20, // 20-30°C
-                    description: ['sunny', 'partly cloudy', 'cloudy', 'light rain'][Math.floor(Math.random() * 4)],
-                    humidity: Math.floor(Math.random() * 30) + 60 // 60-90%
-                };
+       async function loadWeather() {
+    const apiKey = "YOUR_API_KEY"; // Replace with your actual API key
+    const lat = 40.7128;  // Example: New York latitude
+    const lon = -74.0060; // Example: New York longitude
+    const units = "metric"; // "metric" = Celsius
 
-                document.getElementById('weatherTemp').innerHTML = `${weatherData.temperature}°C`;
-                document.getElementById('weatherDesc').textContent = weatherData.description;
-            } catch (error) {
-                console.error('Weather loading failed:', error);
-                document.getElementById('weatherTemp').innerHTML = '25°C';
-                document.getElementById('weatherDesc').textContent = 'Pleasant weather';
-            }
-        }
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units}&appid=${apiKey}`;
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+
+        const temperature = Math.round(data.main.temp); // Celsius
+        const description = data.weather[0].description;
+
+        document.getElementById('weatherTemp').innerHTML = `${temperature}°C`;
+        document.getElementById('weatherDesc').textContent = description;
+    } catch (error) {
+        console.error('Failed to load weather:', error);
+        document.getElementById('weatherTemp').innerHTML = 'N/A';
+        document.getElementById('weatherDesc').textContent = 'Unavailable';
+    }
+}
+
 
         // Setup event listeners
         function setupEventListeners() {
